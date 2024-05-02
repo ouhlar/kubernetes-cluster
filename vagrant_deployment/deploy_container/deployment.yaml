@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: student-container
+  template:
+    metadata:
+      labels:
+        app: student-container
+    spec:
+      containers:
+      - name: student-container
+        image: uhlaro/student_container:latest
+        ports:
+        - containerPort: 22

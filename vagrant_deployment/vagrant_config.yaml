@@ -1,0 +1,26 @@
+# Configuration parameters for Vagrant VMs
+
+# Base box details
+vm_box: 'ubuntu/jammy64'
+vm_provider: 'virtualbox'
+boot_timeout: 900
+
+# IP network settings
+ip_nw: '10.10.0.'
+master_ip_start: 10
+worker_ip_start: 20
+
+# Master node specifications
+num_masters: 1
+master_cpu: 2
+master_memory: 2048
+
+# Worker node specifications
+num_workers: 1
+worker_cpu: 2
+worker_memory: 2048
+
+# Paths to setup scripts
+init_setup_script: './setup_scripts/init_setup.sh'
+master_node_setup_script: './setup_scripts/master_node_setup.sh'
+worker_node_setup_script: './setup_scripts/worker_node_setup.sh'

@@ -1,0 +1,49 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+# Load VM specifications from an external YAML file
+CONFIG = YAML.load_file('vagrant_config.yaml')
+
+Vagrant.configure("2") do |config|
+  # Use a box as specified in the configuration
+  config.vm.box = CONFIG['vm_box'] || 'ubuntu/jammy64'
+  config.vm.boot_timeout = CONFIG['boot_timeout'] || 900
+  config.vm.box_check_update = false
+
+  # Master nodes configuration
+  (1..CONFIG['num_masters']).each do |i|
+    master_ip = "#{CONFIG['ip_nw']}#{CONFIG['master_ip_start'] + i - 1}"
+    config.vm.define "master-#{i}" do |master|
+      master.vm.hostname = "master-node-#{i}"
+      master.vm.network "private_network", ip: master_ip
+      master.vm.provider CONFIG['vm_provider'] || 'virtualbox' do |vb|
+        vb.name = "master-node-#{i}"
+        vb.cpus = CONFIG['master_cpu']
+        vb.memory = CONFIG['master_memory']
+      end
+      master.vm.provision "file", source: "./deploy_container", destination: "/home/vagrant/deploy_container"
+      master.vm.provision "shell", path: CONFIG['init_setup_script']
+      master.vm.provision "shell", path: CONFIG['master_node_setup_script']
+      master.vm.provision "shell", inline: 'echo "Master node provisioned!"'
+    end
+  end
+
+  # Worker nodes configuration
+  (1..CONFIG['num_workers']).each do |i|
+    worker_ip = "#{CONFIG['ip_nw']}#{CONFIG['worker_ip_start'] + i - 1}"
+    config.vm.define "worker-#{i}" do |worker|
+      worker.vm.hostname = "worker-node-#{i}"
+      worker.vm.network "private_network", ip: worker_ip
+      worker.vm.provider CONFIG['vm_provider'] || 'virtualbox' do |vb|
+        vb.name = "worker-node-#{i}"
+        vb.cpus = CONFIG['worker_cpu']
+        vb.memory = CONFIG['worker_memory']
+      end
+      worker.vm.provision "shell", path: CONFIG['init_setup_script']
+      worker.vm.provision "shell", path: CONFIG['worker_node_setup_script']
+      worker.vm.provision "shell", inline: 'echo "Worker node provisioned!"'
+    end
+  end
+end
